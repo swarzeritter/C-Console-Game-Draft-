@@ -235,6 +235,7 @@ void OnGameInit(int command) {
 }
 
 void OnGameLoad() {
+	system("cls");
 	cout << "|+-/|==>Save System\n\
 |Введiть:\n\
 |1 - для створення нового профiлю" << endl;
@@ -251,7 +252,6 @@ void OnGameLoad() {
 				OnGameInit(666);
 			}
 			else {
-				system("cls");
 				return OnGameLoad();
 			}
 		}
@@ -262,6 +262,7 @@ void OnGameLoad() {
 	else if (cmd == "2" && (check.is_open())) {
 		OnGameInit(666);
 	}
+	else { OnGameLoad(); }
 	check.close();
 	auth = true;
 }
