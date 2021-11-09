@@ -4,14 +4,14 @@
 
 /*
 Will do
--Inv system
+-Inv system(60%)
 -item buffs
 -and a lot more
 */
 
 #define logotype			\
 "||============\n\
-|| DUELIST alpha 0.3\n\
+|| DUELIST alpha 0.4\n\
 ||\n\
 |=> "
 using namespace std;
@@ -22,6 +22,12 @@ char bot_do;
 ofstream save;
 
 string cmd;
+int inventory[3][4];
+enum invType {
+	weapon,
+	wear,
+	belt
+};
 
 enum choice {
 	duel,
@@ -42,7 +48,59 @@ void tutorial() {
 	Dialog("Ти напевно спитаєш:\n- А навiщо менi це?");
 	Dialog("А я вiдповiм:\n- А хто його знае, бо ця мiнi-гра є бонусним завданням для вступу до спецiальностi :)");
 }
+enum hands {
+	leftArm,
+	rightArm
+};
+enum itemsinfo {
+	iid,
+	slot,
+	secondSlot,
+	iHP,
+	iDamage,
+	iProtect,
+	iParry
+};
+string ItemName[][2] = {
+	{"0",		"Пусто"},
+	{"1",		"Меч бога"},
+	{"2",		"Тестовий квантовий щит"}
+};
+int Items[][8] = {
+	//id	slot		sSlot		iHP			iDMG		Protect		iProt	iParry
+	{0,		0,			0,			0,			0,			0,			0,			0},
+	{1,		weapon,		rightArm,			10,			11,			20,			13,			25},
+	{2,		weapon,		leftArm,			-99,		9999,		7,			-99999,	-99999}
 
+};
+class Inv {
+public:
+	void InventoryUpdate() {
+		calcPoints(0, 0, 0, 0, 0);
+		for (int i = 0; i < 3; i++) {
+			for (int k = 0; k < 4; k++) {
+				for (int f = 0; f < 4; f++) {
+					int numitem = inventory[i][k];
+					calcPoints(Items[numitem][3], Items[numitem][4], Items[numitem][5], Items[numitem][6], Items[numitem][7]);
+				}
+				if (i == weapon && k == 2) { break; }
+			}
+		}
+	}
+private:
+	int addHP;
+	int addDamage;
+	int addHit;
+	int addProtect;
+	int addParry;
+	void calcPoints(int hp, int dmg, int hit, int protect, int parry) {
+		addHP += hp;
+		addDamage += dmg;
+		addHit += hit;
+		addProtect += protect;
+		addParry += parry;
+	}
+};
 class Player {
 public:
 	string name="defaultname";
@@ -77,7 +135,17 @@ void OnGameInit(int command) {
 			<< player.hit << endl\
 			<< player.protection << endl\
 			<< player.parry << endl\
-			<< player.duel_num << endl;
+			<< player.duel_num << endl\
+			<< inventory[weapon][0] << endl\
+			<< inventory[weapon][1] << endl\
+			<< inventory[wear][0] << endl\
+			<< inventory[wear][1] << endl\
+			<< inventory[wear][2] << endl\
+			<< inventory[wear][3] << endl\
+			<< inventory[belt][0] << endl\
+			<< inventory[belt][1] << endl\
+			<< inventory[belt][2] << endl\
+			<< inventory[belt][3] << endl;
 		save.close();
 	}
 	check >> player.name \
@@ -87,7 +155,17 @@ void OnGameInit(int command) {
 		>> player.hit \
 		>> player.protection \
 		>> player.parry \
-		>> player.duel_num;
+		>> player.duel_num\
+		>> inventory[weapon][0]\
+		>> inventory[weapon][1]\
+		>> inventory[wear][0]\
+		>> inventory[wear][1]\
+		>> inventory[wear][2]\
+		>> inventory[wear][3]\
+		>> inventory[belt][0]\
+		>> inventory[belt][1]\
+		>> inventory[belt][2]\
+		>> inventory[belt][3];
 	check.close();
 	switch (command) {
 	case duel:
@@ -161,7 +239,7 @@ void OnGameInit(int command) {
 					cout << "Знову два гравцi вирiшили помахати своiми мечами\n[HP] -0 HP у обох гравцiв!" << endl;
 				}
 				if (duel_cmd == 'a' && bot_do == 'd' && player.do_chance == false && bot.do_chance == true) {
-					cout << "Може вже досить махати мечем по повітрю?\nВи промахнулись!\n[HP] -0 HP у обох гравцiв!" << endl;
+					cout << "Може вже досить махати мечем по повітрю?\nВи та ваш опонент промахнулись!\n[HP] -0 HP у обох гравцiв!" << endl;
 				}
 				//cout << "debug: " << duel_cmd << " " << bot_do << " " << player.do_chance << " " << bot.do_chance << endl;
 				
@@ -185,7 +263,7 @@ void OnGameInit(int command) {
 					cout << "Ви були готовi вiдбити атаку, але ваш супротивник забув вимкнути праску\n[HP] -0 HP у обох гравцiв!" << endl;
 				}
 				if (duel_cmd == 'd' && player.do_chance == false && bot_do == 'a' && bot.do_chance == false) {
-					cout << "При нападi супротивника, ви раптово втратили рiвновагу, але боту щойно позвонили по телфону, \nтому вiн змушений був вiдповiсти на нього\n[HP] -0 HP у обох гравцiв!" << endl;
+					cout << "При нападi супротивника, ви раптово втратили рiвновагу, але боту щойно позвонили по телфону, \nтому вiн змушений був вiдповiсти на дзвінок\n[HP] -0 HP у обох гравцiв!" << endl;
 				}
 				//cout << "debug: " << duel_cmd << " " << bot_do << " " << player.do_chance << " " << bot.do_chance << endl;
 				break;
@@ -218,7 +296,43 @@ void OnGameInit(int command) {
 		cin >> cmd;
 		break;
 	case inv:
-		cout << "work in progress" << endl;
+		system("cls");
+		cout << "  Голова:	      [" << ItemName[inventory[wear][0]][1] << "] " << endl\
+			<< "                    ▄▄██████▄▄ " << endl\
+			<< "                   ████████████" << endl\
+			<< "                  ██████████████" << endl\
+			<< "                  ███▀      ▀███" << endl\
+			<< "                  ▀█▀ *    * ▀█▀" << endl\
+			<< "                   ▀▄   --   ▄▀" << endl\
+			<< "                     ▀▀▄▄▄▄▀▀" << endl\
+			<< "   Тiло:	      [" << ItemName[inventory[wear][1]][1] << "] " << endl\
+			<< "                   ▄███████████▄" << endl\
+			<< "                  ▄█████████████▄" << endl\
+			<< "                 ▄▀ ▄▀█████████ ▀▄" << endl\
+			<< "               ▄▀ ▄▀  ████████ ▀▄ ▀▄" << endl\
+			<< "               ▀▀▀    ▄▀████▀▄   ▀▄█" << endl\
+			<< "   Права рука: [" << ItemName[inventory[weapon][rightArm]][1] <<"]        Лiва рука: [" << ItemName[inventory[weapon][leftArm]][1] << "] " << endl\
+			<< "                      ██▄▄▄▄██" << endl\
+			<< "	Пояс:      [" << ItemName[inventory[belt][0]][1] << "]    [" << ItemName[inventory[belt][1]][1] << "]" << endl
+			<< "	           [" << ItemName[inventory[belt][2]][1] << "]    [" << ItemName[inventory[belt][3]][1] << "]" << endl
+			<< "                      ████████" << endl\
+			<< "                      ███▀▀███" << endl\
+			<< "                      ███  ███" << endl\
+			<< "                      ███  ███" << endl\
+			<< "  Ноги:    	     [ " << ItemName[inventory[wear][2]][1] << " ] " << endl\
+			<< "                      ███  ███" << endl\
+			<< "                  ▄▄▀████▀▀████▀▄▄" << endl\
+			<< "                ▄▀  █████  █████  ▀▄" << endl\
+			<< "  Взуття:            [ " << ItemName[inventory[wear][3]][1] << " ] " << endl\
+			<< "                █▄                ▄█" << endl\
+			<< "                ████▄▄▄▄▄▄▄▄▄▄▄▄████" << endl\
+			<< "                ████████████████████" << endl;
+		cout << "Повернутись (back): ";
+		cin >> cmd;
+		if (cmd == "back") {
+			system("cls");
+		}
+		break;
 	default:;
 	}
 	//autosave
@@ -230,12 +344,24 @@ void OnGameInit(int command) {
 		<< player.hit << endl\
 		<< player.protection << endl\
 		<< player.parry << endl\
-		<< player.duel_num << endl;
+		<< player.duel_num << endl\
+		<< inventory[weapon][0] << endl\
+		<< inventory[weapon][1] << endl\
+		<< inventory[wear][0] << endl\
+		<< inventory[wear][1] << endl\
+		<< inventory[wear][2] << endl\
+		<< inventory[wear][3] << endl\
+		<< inventory[belt][0] << endl\
+		<< inventory[belt][1] << endl\
+		<< inventory[belt][2] << endl\
+		<< inventory[belt][3] << endl;
 	save.close();
 }
 
 void OnGameLoad() {
 	system("cls");
+	Inv player;
+	player.InventoryUpdate();
 	cout << "|+-/|==>Save System\n\
 |Введiть:\n\
 |1 - для створення нового профiлю" << endl;
@@ -265,6 +391,7 @@ void OnGameLoad() {
 	else { OnGameLoad(); }
 	check.close();
 	auth = true;
+	system("cls");
 }
 
 void cmds(string cmd) {
