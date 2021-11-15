@@ -58,6 +58,7 @@ enum itemsinfo {
 	secondSlot,
 	iHP,
 	iDamage,
+	iHit,
 	iProtect,
 	iParry
 };
@@ -67,25 +68,38 @@ string ItemName[][2] = {
 	{"2",		"Тестовий квантовий щит"}
 };
 int Items[][8] = {
-	//id	slot		sSlot		iHP			iDMG		Protect		iProt	iParry
-	{0,		0,			0,			0,			0,			0,			0,			0},
-	{1,		weapon,		rightArm,			10,			11,			20,			13,			25},
-	{2,		weapon,		leftArm,			-99,		9999,		7,			-99999,	-99999}
+	//id		slot		sSlot		iHP			iDMG		iHit		iProt		iParry
+	{0,			0,			0,			0,			0,			0,			0,			0},
+	{1,			weapon,		rightArm,	10,			11,			20,			13,			25},
+	{2,			weapon,		leftArm,	-99,		9999,		7,			-99999,	-99999}
 
 };
 class Inv {
 public:
 	void InventoryUpdate() {
-		calcPoints(0, 0, 0, 0, 0);
+		restorePoints();
 		for (int i = 0; i < 3; i++) {
 			for (int k = 0; k < 4; k++) {
-				for (int f = 0; f < 4; f++) {
-					int numitem = inventory[i][k];
-					calcPoints(Items[numitem][3], Items[numitem][4], Items[numitem][5], Items[numitem][6], Items[numitem][7]);
-				}
+				int numitem = inventory[i][k];
+				calcPoints(Items[numitem][3], Items[numitem][4], Items[numitem][5], Items[numitem][6], Items[numitem][7]);
 				if (i == weapon && k == 2) { break; }
 			}
 		}
+	}
+	int totalHP(int i) {
+		return addHP + i;
+	}
+	int totalDamage(int i) {
+		return addDamage + i;
+	}
+	int totalHit(int i) {
+		return addHit + i;
+	}
+	int totalProtect(int i) {
+		return addProtect + i;
+	}
+	int totalParry(int i) {
+		return addParry	+ i;
 	}
 private:
 	int addHP;
@@ -93,6 +107,9 @@ private:
 	int addHit;
 	int addProtect;
 	int addParry;
+	void restorePoints() {
+		addHP = addDamage = addHit = addProtect = addParry = 0;
+	}
 	void calcPoints(int hp, int dmg, int hit, int protect, int parry) {
 		addHP += hp;
 		addDamage += dmg;
@@ -104,11 +121,11 @@ private:
 class Player {
 public:
 	string name="defaultname";
-	double health = 100;
+	int health = 100;
 	bool do_chance = false;
 	int exp=0;
 	int lvl=1;
-	double damage = 10;
+	int damage = 10;
 	int hit=50;
 	int protection=50;
 	int parry=15;
@@ -167,6 +184,8 @@ void OnGameInit(int command) {
 		>> inventory[belt][2]\
 		>> inventory[belt][3];
 	check.close();
+	Inv owner;
+	owner.InventoryUpdate();
 	switch (command) {
 	case duel:
 		char duel_cmd;
@@ -287,13 +306,15 @@ void OnGameInit(int command) {
 			<< "Iм'я: " << player.name << endl \
 			<< "Досвiд: " << player.exp << endl\
 			<< "Рiвень: " << player.lvl << endl\
-			<< "Урон: " << player.damage << endl\
-			<< "Шанс попадання: " << player.hit << endl\
-			<< "Шанс захисту: " << player.protection << endl\
-			<< "Шанс парування" << player.parry << endl\
+			<< "Макс. здоров'я: " << player.health << "	+(" << owner.totalHP(0) << ")" << endl\
+			<< "Урон: " << player.damage << "		+(" << owner.totalDamage(0) << ")" <<  endl\
+			<< "Шанс попадання: " << player.hit << "	+(" << owner.totalHit(0) << ")" << endl\
+			<< "Шанс захисту: " << player.protection << "	+(" << owner.totalProtect(0) << ")" << endl\
+			<< "Шанс парування: " << player.parry << "	+(" << owner.totalParry(0) << ")" << endl\
 			<< "Кi-сть дуелей: " << player.duel_num << endl;
 		cout << "\n\nback - щоб повернутися\n" << endl;
 		cin >> cmd;
+		system("cls");
 		break;
 	case inv:
 		system("cls");
@@ -311,7 +332,7 @@ void OnGameInit(int command) {
 			<< "                 ▄▀ ▄▀█████████ ▀▄" << endl\
 			<< "               ▄▀ ▄▀  ████████ ▀▄ ▀▄" << endl\
 			<< "               ▀▀▀    ▄▀████▀▄   ▀▄█" << endl\
-			<< "   Права рука: [" << ItemName[inventory[weapon][rightArm]][1] <<"]        Лiва рука: [" << ItemName[inventory[weapon][leftArm]][1] << "] " << endl\
+			<< "   Права рука: [" << ItemName[inventory[weapon][rightArm]][1] << "]   Лiва рука: [" << ItemName[inventory[weapon][leftArm]][1] << "] " << endl\
 			<< "                      ██▄▄▄▄██" << endl\
 			<< "	Пояс:      [" << ItemName[inventory[belt][0]][1] << "]    [" << ItemName[inventory[belt][1]][1] << "]" << endl
 			<< "	           [" << ItemName[inventory[belt][2]][1] << "]    [" << ItemName[inventory[belt][3]][1] << "]" << endl
@@ -321,12 +342,9 @@ void OnGameInit(int command) {
 			<< "                      ███  ███" << endl\
 			<< "  Ноги:    	     [ " << ItemName[inventory[wear][2]][1] << " ] " << endl\
 			<< "                      ███  ███" << endl\
-			<< "                  ▄▄▀████▀▀████▀▄▄" << endl\
-			<< "                ▄▀  █████  █████  ▀▄" << endl\
-			<< "  Взуття:            [ " << ItemName[inventory[wear][3]][1] << " ] " << endl\
-			<< "                █▄                ▄█" << endl\
-			<< "                ████▄▄▄▄▄▄▄▄▄▄▄▄████" << endl\
-			<< "                ████████████████████" << endl;
+			<< "                     ████  ████" << endl\
+			<< "                    █████  █████ " << endl\
+			<< "  Взуття:            [ " << ItemName[inventory[wear][3]][1] << " ] " << endl;
 		cout << "Повернутись (back): ";
 		cin >> cmd;
 		if (cmd == "back") {
@@ -360,8 +378,6 @@ void OnGameInit(int command) {
 
 void OnGameLoad() {
 	system("cls");
-	Inv player;
-	player.InventoryUpdate();
 	cout << "|+-/|==>Save System\n\
 |Введiть:\n\
 |1 - для створення нового профiлю" << endl;
@@ -399,6 +415,7 @@ void cmds(string cmd) {
 		cout << "\
 |КОМАНДИ:\n\
 |duel - розпочати дуель\n\
+|stats - iгрова статистика\n\
 |inv - iнвентар\n\
 |q - вийти з гри\n\n";
 	}
