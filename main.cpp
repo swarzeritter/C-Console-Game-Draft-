@@ -131,6 +131,32 @@ public:
 	int protection=50;
 	int parry=15;
 	int duel_num = 0;
+
+	int newLVL() {
+		cout << "======================================\n\
+Вiтаємо ви отримали " << lvl << " рiвень персонажа!!\n\
+Ви можете покращити одне з умiнь вашого персонажу!\nДля цього введiть\n\
+1 - шанс попадання\n\
+2 - шанс захисту\n\
+3 - шанс парирування\n\n";
+		cin >> cmd;
+		if (cmd == "1") {
+			hit += 2;
+			cout << "Ви успiшно прокачали шанс попадання на 2 одиницi" << endl;
+		}
+		else if (cmd == "2") {
+			protection += 2;
+			cout << "Ви успiшно прокачали шанс захисту на 2 одиницi" << endl;
+		}
+		else if (cmd == "3") {
+			parry += 2;
+			cout << "Ви успiшно прокачали шанс парирування на 2 одиницi" << endl;
+		}
+		else {
+			return newLVL();
+		}
+		return 0;
+	}
 	int toNextLVL() {
 		if (lvl >= 20) { return 0; }
 		int tempExp = 8;
@@ -148,15 +174,14 @@ public:
 		while (exp > tempExp) {
 			exp -= tempExp;
 			lvl++;
-			cout << "Вiтаємо ви отримали " << lvl << " рiвень персонажа!!" << endl;
+			newLVL();
 		}
-		//ability up
 		return 0;
 	}
 	int giveRandExp(int i) {
 		srand(time(NULL));
 		int tempExp=rand()%i+1;
-		cout << "[EXP] За цей бiй ви отримали " << tempExp << " досвіду" << endl;
+		cout << "[EXP] За цей бiй ви отримали " << tempExp << " досвiду" << endl;
 		exp += tempExp;
 		return 0;
 	}
@@ -453,6 +478,8 @@ void cmds(string cmd) {
 |duel - розпочати дуель\n\
 |stats - iгрова статистика\n\
 |inv - iнвентар\n\
+|cls - очистити вiкно\n\
+|logout - вийти з iгрового профiлю\n\
 |q - вийти з гри\n\n";
 	}
 	else if (cmd == "duel") {
@@ -463,6 +490,13 @@ void cmds(string cmd) {
 	}
 	else if (cmd == "stats") {
 		OnGameInit(stats);
+	}
+	else if (cmd == "cls") {
+		system("cls");
+	}
+	else if (cmd == "logout") {
+		auth = false;
+		system("cls");
 	}
 	else if (cmd == "q" or cmd == "quit") {
 		exit(0);
