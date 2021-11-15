@@ -7,6 +7,7 @@ Will do
 -Inv system(60%)
 -item buffs
 -and a lot more
+-do normal parry
 */
 
 #define logotype			\
@@ -130,6 +131,35 @@ public:
 	int protection=50;
 	int parry=15;
 	int duel_num = 0;
+	int toNextLVL() {
+		if (lvl >= 20) { return 0; }
+		int tempExp = 8;
+		for (int i = lvl; i > 1; i--) {
+			tempExp += 2;
+		}
+		return tempExp;
+	}
+	int calcLVL() {
+		if (lvl >= 20) { return 0; }
+		int tempExp = 8;
+		for (int i = lvl; i > 1;i--) {
+			tempExp += 2;
+		}
+		while (exp > tempExp) {
+			exp -= tempExp;
+			lvl++;
+			cout << "Вiтаємо ви отримали " << lvl << " рiвень персонажа!!" << endl;
+		}
+		//ability up
+		return 0;
+	}
+	int giveRandExp(int i) {
+		srand(time(NULL));
+		int tempExp=rand()%i+1;
+		cout << "[EXP] За цей бiй ви отримали " << tempExp << " досвіду" << endl;
+		exp += tempExp;
+		return 0;
+	}
 };
 
 
@@ -186,6 +216,7 @@ void OnGameInit(int command) {
 	check.close();
 	Inv owner;
 	owner.InventoryUpdate();
+	srand(time(NULL));
 	switch (command) {
 	case duel:
 		char duel_cmd;
@@ -290,13 +321,17 @@ void OnGameInit(int command) {
 		}
 		if (bot.health <= 0 && player.health > 0) {
 			cout << "[!!!] Вiтаю ви перемогли бота!" << endl;
+			player.giveRandExp(8);
 		}
 		else if (player.health <= 0 && bot.health > 0) {
 			cout << "[!!!] Як сумно, вас перемiг випадковий набiр чисел!" << endl;
+			player.giveRandExp(6);
 		}
 		else {
 			cout << "[!!!] Перемогти бота це круто, але потрiбно було залишитись в живих :/ " << endl;
+			player.giveRandExp(4);
 		}
+		player.calcLVL();
 		player.duel_num++;
 		break;
 		
@@ -304,7 +339,7 @@ void OnGameInit(int command) {
 		system("cls");
 		cout << "=======[Ваш iгровий персонаж]========" << endl\
 			<< "Iм'я: " << player.name << endl \
-			<< "Досвiд: " << player.exp << endl\
+			<< "Досвiд: " << player.exp << " / " << player.toNextLVL() << endl\
 			<< "Рiвень: " << player.lvl << endl\
 			<< "Макс. здоров'я: " << player.health << "	+(" << owner.totalHP(0) << ")" << endl\
 			<< "Урон: " << player.damage << "		+(" << owner.totalDamage(0) << ")" <<  endl\
@@ -313,6 +348,7 @@ void OnGameInit(int command) {
 			<< "Шанс парування: " << player.parry << "	+(" << owner.totalParry(0) << ")" << endl\
 			<< "Кi-сть дуелей: " << player.duel_num << endl;
 		cout << "\n\nback - щоб повернутися\n" << endl;
+		player.calcLVL();
 		cin >> cmd;
 		system("cls");
 		break;
