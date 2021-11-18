@@ -102,6 +102,9 @@ public:
 	int totalParry(int i) {
 		return addParry	+ i;
 	}
+	int dropItem() {
+
+	}
 private:
 	int addHP;
 	int addDamage;
@@ -245,6 +248,7 @@ void OnGameInit(int command) {
 	switch (command) {
 	case duel:
 		char duel_cmd;
+		player.health = owner.totalHP(player.health);
 		system("cls");
 		cout << "Бачу ти вже готовий! Твiй супротивник: Бот#" << rand()%100 << endl;
 		cout << "Його данi:" << endl\
@@ -278,28 +282,31 @@ void OnGameInit(int command) {
 				else { bot.do_chance = false; }
 				break;
 			}
-			//buf's
 			switch (duel_cmd) {
 			case 'a':
-				if (rand() % 101 <= player.hit) {
+				if (rand() % 101 <= owner.totalHit(player.hit)) {
 					player.do_chance = true;
 				}
 				else { player.do_chance = false; }
-				if (rand() % 101 <= player.parry && bot_do == 'a' && duel_cmd == 'a' && bot.do_chance == true && player.do_chance == true) {
+				if (rand() % 101 <= owner.totalParry(player.parry) && bot_do == 'a' && duel_cmd == 'a' && bot.do_chance == true && player.do_chance == true) {
 					cout << "Ви парирували атаку супротивника -0 HP у обох гравцiв!" << endl;
 				}
 				else if (bot_do == 'a' && duel_cmd == 'a' && bot.do_chance == true && player.do_chance == true) {
 					cout << "Ви поранили один одного" << endl\
-						<< "[HP] Ви -"<<bot.damage << endl\
-						<< "[HP] Бот -"<< player.damage << endl;
+						<< "[HP] Ви -"<< bot.damage << endl\
+						<< "[HP] Бот -"<< owner.totalDamage(player.damage) << endl;
 					player.health -= bot.damage;
-					bot.health -= player.damage;
+					bot.health -= owner.totalDamage(player.damage);
 				}
 				if (duel_cmd == 'a' && player.do_chance == true && bot.do_chance == false) {
-					cout << "Бот не змiг передбачити ваш маневр, тому ви змогли атакувати його!\n[HP] Супротивник -" << player.damage << "HP" << endl;
-					bot.health -= player.damage;
+					cout << "Бот не змiг передбачити ваш маневр, тому ви змогли атакувати його!\n[HP] Супротивник -" << owner.totalDamage(player.damage) << "HP" << endl;
+					bot.health -= owner.totalDamage(player.damage);
 				}
-				if (duel_cmd == 'a' && player.do_chance == true && bot_do == 'd' && bot.do_chance == true) {
+				if (rand() % 101 <= bot.parry && duel_cmd == 'a' && player.do_chance == true && bot_do == 'd' && bot.do_chance == true) {
+					cout << "Ви бездумно замахнулись iз усiєii сили в супротивника, але бот зумiв передбачити це, але меч вiдрiкошетило по вам самим." << endl;
+					player.health -= bot.damage;
+				}
+				else if (duel_cmd == 'a' && player.do_chance == true && bot_do == 'd' && bot.do_chance == true) {
 					cout << "Бот змiг ухилитися вiд вашого удару\n[HP] -0 HP у обох гравцiв!" << endl;
 				}
 				if (bot_do == 'a' && duel_cmd == 'a' && bot.do_chance == false && player.do_chance == false) {
@@ -320,18 +327,22 @@ void OnGameInit(int command) {
 				
 				break;
 			case 'd':
-				if (rand() % 101 <= player.protection) {
+				if (rand() % 101 <= owner.totalProtect(player.protection)) {
 					player.do_chance = true;
 				}
 				else { player.do_chance = false; }
 				if (bot_do == 'd' && duel_cmd == 'd') {
 					cout << "О_о, два гравцi вирiшили покрутитися навколо повiтря\n[HP] -0 HP у обох гравцiв!" << endl;
 				}
-				if (duel_cmd == 'd' && player.do_chance == true && bot_do == 'a' && bot.do_chance == true) {
+				if (rand() % 101 <= owner.totalParry(player.parry) && duel_cmd == 'd' && player.do_chance == true && bot_do == 'a' && bot.do_chance == true) {
+					cout << "Бот накинувсь на вас з усiх сил, але не помiтив вашой пiднiжки, тому вiн впав\n[HP] Бот -" << owner.totalDamage(player.damage) << endl;
+					player.health -= owner.totalDamage(player.damage);
+				}
+				else if (duel_cmd == 'd' && player.do_chance == true && bot_do == 'a' && bot.do_chance == true) {
 					cout << "Бот намагавсь пробити вашу оборону, але у нього нiчого не вийшло.\n[HP] -0 HP у обох гравцiв!" << endl;
 				}
 				if (duel_cmd == 'd' && player.do_chance == false && bot_do == 'a' && bot.do_chance == true) {
-					cout << "Суперник вашого танцю не зрозумiв, тому з легкiстю пробив вашу оборону\n[HP] Ви -" << player.damage << endl;
+					cout << "Суперник вашого танцю не зрозумiв, тому з легкiстю пробив вашу оборону\n[HP] Ви -" << bot.damage << endl;
 					player.health -= bot.damage;
 				}
 				if (duel_cmd == 'd' && player.do_chance == true && bot_do == 'a' && bot.do_chance == false) {
@@ -347,14 +358,15 @@ void OnGameInit(int command) {
 		if (bot.health <= 0 && player.health > 0) {
 			cout << "[!!!] Вiтаю ви перемогли бота!" << endl;
 			player.giveRandExp(8);
+			owner.dropItem();
 		}
 		else if (player.health <= 0 && bot.health > 0) {
 			cout << "[!!!] Як сумно, вас перемiг випадковий набiр чисел!" << endl;
-			player.giveRandExp(6);
+			player.giveRandExp(4);
 		}
 		else {
 			cout << "[!!!] Перемогти бота це круто, але потрiбно було залишитись в живих :/ " << endl;
-			player.giveRandExp(4);
+			player.giveRandExp(6);
 		}
 		player.calcLVL();
 		player.duel_num++;
