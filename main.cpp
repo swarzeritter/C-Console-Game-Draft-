@@ -49,6 +49,12 @@ void tutorial() {
 	Dialog("Ти напевно спитаєш:\n- А навiщо менi це?");
 	Dialog("А я вiдповiм:\n- А хто його знае, бо ця мiнi-гра є бонусним завданням для вступу до спецiальностi :)");
 }
+enum wears {
+	head,
+	body,
+	legs,
+	boots
+};
 enum hands {
 	leftArm,
 	rightArm
@@ -65,14 +71,23 @@ enum itemsinfo {
 };
 string ItemName[][2] = {
 	{"0",		"Пусто"},
-	{"1",		"Меч бога"},
-	{"2",		"Тестовий квантовий щит"}
+	{"1",		"Меч авантюриста"},
+	{"2",		"Щит авантюриста"},
+	{"3",		"Шлем авантюриста"},
+	{"4",		"Кожух авантюриста"},
+	{"5",		"Штани авантюриста"},
+	{"6",		"Шлем авантюриста"}
 };
 int Items[][8] = {
 	//id		slot		sSlot		iHP			iDMG		iHit		iProt		iParry
+//	{,			,			,			,			,			,			,			 }
 	{0,			0,			0,			0,			0,			0,			0,			0},
-	{1,			weapon,		rightArm,	10,			11,			20,			13,			25},
-	{2,			weapon,		leftArm,	-99,		9999,		7,			-99999,	-99999}
+	{1,			weapon,		rightArm,	0,			10,			-5,			3,			0},
+	{2,			weapon,		leftArm,	0,			-5,			0,			2,			2},
+	{3,			wear,		head,		0,			2,			0,			1,			0},
+	{4,			wear,		body,		0,			-1,			-1,			3,			1},
+	{5,			wear,		legs,		0,			-1,			0,			3,			1},
+	{6,			wear,		boots,		0,			0,			0,			1,			1}
 
 };
 class Player {
@@ -87,6 +102,7 @@ public:
 	int protection=50;
 	int parry=15;
 	int duel_num = 0;
+	int dropChance = 30;
 
 	int newLVL() {
 		cout << "======================================\n\
@@ -135,7 +151,6 @@ public:
 		return 0;
 	}
 	int giveRandExp(int i) {
-		srand(time(NULL));
 		int tempExp=rand()%i+1;
 		cout << "[EXP] За цей бiй ви отримали " << tempExp << " досвiду" << endl;
 		exp += tempExp;
@@ -166,7 +181,69 @@ public:
 	int totalParry(int i) {
 		return addParry + i;
 	}
+	void getTypeSlot(int slot, int sslot) {
+		string tt1,tt2;
+		if (slot == weapon) { 
+			tt1 = "Зброя";
+			switch (sslot) {
+			case leftArm: {
+				tt2 = "Лiва рука";
+				break;
+			}
+			case rightArm: {
+				tt2 = "Права рука";
+				break;
+			}
+			}
+		}
+		else if (slot == wear) {
+			tt1 = "Одяг";
+			switch (sslot) {
+			case head: {
+				tt2 = "Голова";
+				break;
+			}
+			case body: {
+				tt2 = "Голова";
+				break;
+			}
+			case legs: {
+				tt2 = "Ноги";
+				break;
+			}
+			case boots: {
+				tt2 = "Стопа";
+				break;
+			}
+			}
+		}
+		else if (slot == belt) {
+			tt1 = "Пояс";
+			tt2 = " ";
+		}
+		cout << "Тип:\t\t\t" << tt1 << " " << tt2 << endl;
+	}
+	int getItemInfo(int id) {
+		cout << "Назва:\t\t\t" << ItemName[id][1] << endl;
+		getTypeSlot(Items[id][slot], Items[id][secondSlot]);
+		cout	<< "Додаткове HP:\t\t\t" << Items[id][iHP] << endl\
+			<< "Додатковий урон:\t\t" << Items[id][iDamage] << endl\
+			<< "Додатковий шанс попадання:\t" << Items[id][iHit] << endl\
+			<< "Додатковий шанс захисту:\t" << Items[id][iProtect] << endl\
+			<< "Додатковий шанс контратакувати:\t" << Items[id][iParry] << endl;
+		//...
+		return 0;
+	}
 	int dropItem() {
+		int tempid=1+rand()%size(Items);
+		cout << "\n==================================" << endl\
+			<<"Ого ви знайшли новий предмет!" << endl;
+		getItemInfo(tempid);
+		return 0;
+	}
+	int noDrop() {
+		dropChance += 5;
+		cout << "Нажаль нового предмету ви не отримаєте :( (+5% до шансу для наступноii спроби)" << endl;
 		return 0;
 	}
 private:
@@ -208,6 +285,7 @@ void OnGameInit(int command) {
 			<< player.protection << endl\
 			<< player.parry << endl\
 			<< player.duel_num << endl\
+			<< player.dropChance << endl \
 			<< inventory[weapon][0] << endl\
 			<< inventory[weapon][1] << endl\
 			<< inventory[wear][0] << endl\
@@ -228,6 +306,7 @@ void OnGameInit(int command) {
 		>> player.protection \
 		>> player.parry \
 		>> player.duel_num\
+		>> player.dropChance\
 		>> inventory[weapon][0]\
 		>> inventory[weapon][1]\
 		>> inventory[wear][0]\
@@ -240,13 +319,12 @@ void OnGameInit(int command) {
 		>> inventory[belt][3];
 	check.close();
 	player.InventoryUpdate();
-	srand(time(NULL));
 	switch (command) {
 	case duel:
 		char duel_cmd;
 		player.health = player.totalHP(player.health);
 		system("cls");
-		cout << "Бачу ти вже готовий! Твiй супротивник: Бот#" << rand()%100 << endl;
+		cout << "Бачу ти вже готовий! Твiй супротивник: Бот#" << rand()%100 << endl;//i
 		cout << "Його данi:" << endl\
 			<< "LVL: " << bot.lvl << endl\
 			<< "DMG: " << bot.damage << endl\
@@ -299,8 +377,11 @@ void OnGameInit(int command) {
 					bot.health -= player.totalDamage(player.damage);
 				}
 				if (rand() % 101 <= bot.parry && duel_cmd == 'a' && player.do_chance == true && bot_do == 'd' && bot.do_chance == true) {
+					int tempranddmg = rand() % 11;
 					cout << "Ви бездумно замахнулись iз усiєii сили в супротивника, але бот зумiв передбачити це, але меч вiдрiкошетило по вам самим." << endl;
-					player.health -= bot.damage;
+					cout << "Ви: -" << (bot.damage + tempranddmg) << endl;
+					player.health -= (bot.damage+tempranddmg);
+
 				}
 				else if (duel_cmd == 'a' && player.do_chance == true && bot_do == 'd' && bot.do_chance == true) {
 					cout << "Бот змiг ухилитися вiд вашого удару\n[HP] -0 HP у обох гравцiв!" << endl;
@@ -331,8 +412,9 @@ void OnGameInit(int command) {
 					cout << "О_о, два гравцi вирiшили покрутитися навколо повiтря\n[HP] -0 HP у обох гравцiв!" << endl;
 				}
 				if (rand() % 101 <= player.totalParry(player.parry) && duel_cmd == 'd' && player.do_chance == true && bot_do == 'a' && bot.do_chance == true) {
-					cout << "Бот накинувсь на вас з усiх сил, але не помiтив вашой пiднiжки, тому вiн впав\n[HP] Бот -" << player.totalDamage(player.damage) << endl;
-					player.health -= player.totalDamage(player.damage);
+					int tempranddmg = rand() % 11;
+					cout << "Бот накинувсь на вас з усiх сил, але не помiтив вашой пiднiжки, тому вiн впав\n[HP] Бот -" << player.totalDamage(player.damage)+tempranddmg << endl;
+					player.health -= (player.totalDamage(player.damage)+tempranddmg);
 				}
 				else if (duel_cmd == 'd' && player.do_chance == true && bot_do == 'a' && bot.do_chance == true) {
 					cout << "Бот намагавсь пробити вашу оборону, але у нього нiчого не вийшло.\n[HP] -0 HP у обох гравцiв!" << endl;
@@ -354,6 +436,12 @@ void OnGameInit(int command) {
 		if (bot.health <= 0 && player.health > 0) {
 			cout << "[!!!] Вiтаю ви перемогли бота!" << endl;
 			player.giveRandExp(8);
+			if (rand() % 101 < player.dropChance) {
+				player.dropItem();
+			}
+			else {
+				player.noDrop();
+			}
 			player.dropItem();
 		}
 		else if (player.health <= 0 && bot.health > 0) {
@@ -379,7 +467,8 @@ void OnGameInit(int command) {
 			<< "Шанс попадання: " << player.hit << "	+(" << player.totalHit(0) << ")" << endl\
 			<< "Шанс захисту: " << player.protection << "	+(" << player.totalProtect(0) << ")" << endl\
 			<< "Шанс парування: " << player.parry << "	+(" << player.totalParry(0) << ")" << endl\
-			<< "Кi-сть дуелей: " << player.duel_num << endl;
+			<< "Кi-сть дуелей: " << player.duel_num << endl\
+			<< "Шанс випадiння нового предмету: " << player.dropChance << endl;
 		cout << "\n\nback - щоб повернутися\n" << endl;
 		player.calcLVL();
 		cin >> cmd;
@@ -432,6 +521,7 @@ void OnGameInit(int command) {
 		<< player.protection << endl\
 		<< player.parry << endl\
 		<< player.duel_num << endl\
+		<< player.dropChance << endl \
 		<< inventory[weapon][0] << endl\
 		<< inventory[weapon][1] << endl\
 		<< inventory[wear][0] << endl\
@@ -516,10 +606,13 @@ void cmds(string cmd) {
 
 int main() {
 	setlocale(LC_ALL, "rus");
+	srand(time(NULL));
 	//OnGameInit(666);
 	if (!auth) { OnGameLoad(); }
-	cout << logotype;
-	cin >> cmd;
-	cmds(cmd);
-	return main();
+	while (true) {
+		cout << logotype;
+		cin >> cmd;
+		cmds(cmd);
+	}
+	return 0;
 }
