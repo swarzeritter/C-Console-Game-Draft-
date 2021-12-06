@@ -225,13 +225,18 @@ public:
 	}
 	int getItemInfo(int id) {
 		cout << "Назва:\t\t\t" << ItemName[id][1] << endl;
-		getTypeSlot(Items[id][slot], Items[id][secondSlot]);
-		cout	<< "Додаткове HP:\t\t\t" << Items[id][iHP] << endl\
-			<< "Додатковий урон:\t\t" << Items[id][iDamage] << endl\
-			<< "Додатковий шанс попадання:\t" << Items[id][iHit] << endl\
-			<< "Додатковий шанс захисту:\t" << Items[id][iProtect] << endl\
-			<< "Додатковий шанс контратакувати:\t" << Items[id][iParry] << endl;
-		//...
+		if (id) {
+			getTypeSlot(Items[id][slot], Items[id][secondSlot]);
+			cout << "Додаткове HP:\t\t\t" << Items[id][iHP] << endl\
+				<< "Додатковий урон:\t\t" << Items[id][iDamage] << endl\
+				<< "Додатковий шанс попадання:\t" << Items[id][iHit] << endl\
+				<< "Додатковий шанс захисту:\t" << Items[id][iProtect] << endl\
+				<< "Додатковий шанс контратакувати:\t" << Items[id][iParry] << endl;
+		}
+		return 0;
+	}
+	int equipItem(int id) {
+		inventory[Items[id][slot]][Items[id][secondSlot]] = id;
 		return 0;
 	}
 	int dropItem() {
@@ -239,6 +244,26 @@ public:
 		cout << "\n==================================" << endl\
 			<<"Ого ви знайшли новий предмет!" << endl;
 		getItemInfo(tempid);
+		if (Items[tempid][slot] != belt) {
+			cout << "\nПоточний предмет\n\n";
+			getItemInfo(inventory[Items[tempid][slot]][Items[tempid][secondSlot]]);
+		}
+		cout << "Одягти? (y/n): ";
+		cin >> cmd;
+		if (cmd == "yes" || cmd == "y") {
+			if (Items[tempid][slot] == belt) {
+				cout << "Виберiть слот: " << endl;
+				//...
+			}
+			else {
+				cout << "Ви успiшно одягли предмет" << endl;
+				equipItem(tempid);
+			}
+		}
+		else if (cmd == "no" || cmd == "n") {
+			return 0;
+		}
+		else { cin >> cmd; }
 		return 0;
 	}
 	int noDrop() {
@@ -442,7 +467,6 @@ void OnGameInit(int command) {
 			else {
 				player.noDrop();
 			}
-			player.dropItem();
 		}
 		else if (player.health <= 0 && bot.health > 0) {
 			cout << "[!!!] Як сумно, вас перемiг випадковий набiр чисел!" << endl;
@@ -452,6 +476,7 @@ void OnGameInit(int command) {
 			cout << "[!!!] Перемогти бота це круто, але потрiбно було залишитись в живих :/ " << endl;
 			player.giveRandExp(6);
 		}
+		player.dropItem();
 		player.calcLVL();
 		player.duel_num++;
 		break;
