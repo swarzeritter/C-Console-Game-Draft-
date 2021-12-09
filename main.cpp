@@ -4,15 +4,12 @@
 
 /*
 Will do
--Inv system(60%)
--item buffs
--and a lot more
--do normal parry
+~
 */
 
 #define logotype			\
 "||============\n\
-|| DUELIST alpha 0.4\n\
+|| DUELIST beta 0.1\n\
 ||\n\
 |=> "
 using namespace std;
@@ -33,7 +30,8 @@ enum invType {
 enum choice {
 	duel,
 	inv,
-	stats
+	stats,
+	debug
 };
 
 void Dialog(string text) {
@@ -76,7 +74,8 @@ string ItemName[][2] = {
 	{"3",		"Шлем авантюриста"},
 	{"4",		"Кожух авантюриста"},
 	{"5",		"Штани авантюриста"},
-	{"6",		"Шлем авантюриста"}
+	{"6",		"Шлем авантюриста"},
+	{"7",		"Пояс Зевса"}
 };
 int Items[][8] = {
 	//id		slot		sSlot		iHP			iDMG		iHit		iProt		iParry
@@ -87,7 +86,8 @@ int Items[][8] = {
 	{3,			wear,		head,		0,			2,			0,			1,			0},
 	{4,			wear,		body,		0,			-1,			-1,			3,			1},
 	{5,			wear,		legs,		0,			-1,			0,			3,			1},
-	{6,			wear,		boots,		0,			0,			0,			1,			1}
+	{6,			wear,		boots,		0,			0,			0,			1,			1},
+	{1,			belt,		0,			2,			3,			5,			-7,			-6}
 
 };
 class Player {
@@ -235,32 +235,149 @@ public:
 		}
 		return 0;
 	}
+	int advancedInv() {
+		cout << "\n1. [Зброя]\n"\
+			<< "2. [Одяг]\n"\
+			<< "3. [Пояс]\n";
+		cout << "Число вiд 1-3, або back\n==>";
+		cin >> cmd;
+		int choice;
+		system("cls");
+		if (cmd == "1") {
+			for (int i = 0; i < 2; i++) {
+				cout << i + 1 << ". " << "[" << ItemName[inventory[weapon][i]][1] << "]\n";
+			}
+			choice = weapon;
+		}
+		else if (cmd == "2") {
+			for (int i = 0; i < size(inventory[wear]); i++) {
+				cout << i + 1 << ". " << "[" << ItemName[inventory[wear][i]][1] << "]\n";
+			}
+			choice = wear;
+		}
+		else if (cmd == "3") {
+			for (int i = 0; i < size(inventory[belt]); i++) {
+				cout << i + 1 << ". " << "[" << ItemName[inventory[belt][i]][1] << "]\n";
+			}
+			choice = belt;
+		}
+		else if (cmd == "back") {
+			return 0;
+		}
+		cin >> cmd;
+		system("cls");
+		int icmd=0;
+		if (cmd == "1") {
+			icmd = 0;
+		}
+		else if (cmd == "2") {
+			icmd = 1;
+		}
+		else if (cmd == "3") {
+			icmd = 2;
+		}
+		else if (cmd == "4") {
+			icmd = 3;
+		}
+		else { return advancedInv(); }
+		cout << "Ви вибрали: " << endl;
+		getItemInfo(inventory[choice][icmd]);
+		cout << "\nВикинути предмет - delete\nПовернутися на початок - back\n===> ";
+		cin >> cmd;
+		system("cls");
+		while (true) {
+			if (cmd == "delete") {
+				cout << "Ви впевненi, що хочете викинути " << ItemName[inventory[choice][icmd]][1] << " ?(y/n): ";
+				if (confirm()) {
+					cout << "Ви викинули непотреб!" << endl;
+					inventory[choice][icmd] = 0;
+					return 0;
+				}
+				else {
+					return 0;
+				}
+			}
+			else if (cmd == "back") {
+				advancedInv();
+				break;
+			}
+		}
+		return 0;
+	}
 	int equipItem(int id) {
 		inventory[Items[id][slot]][Items[id][secondSlot]] = id;
+		return 0;
+	}
+	int equipBelt(int id, int choice) {
+		inventory[belt][choice] = id;
+		return 0;
+	}
+	int confirm() {
+		cin >> cmd;
+		if (cmd == "yes" || cmd == "y") { return true; }
+		else if (cmd == "no" || cmd == "n") { return false; }
+		else { return confirm(); }
+	}
+	int dropBelt(int id) {
+		system("cls");
+		cout << "Виберiть слот: \n\n";
+		cout << (!inventory[belt][0] ? "1. Пусто" : ItemName[inventory[belt][0]][1]) << endl;
+		cout << (!inventory[belt][1] ? "2. Пусто" : ItemName[inventory[belt][0]][1]) << endl;
+		cout << (!inventory[belt][2] ? "3. Пусто" : ItemName[inventory[belt][0]][1]) << endl;
+		cout << (!inventory[belt][3] ? "4. Пусто" : ItemName[inventory[belt][0]][1]) << endl;
+		cin >> cmd;
+		int choice;
+		if (cmd == "1") {
+			choice = 0;
+		}
+		else if (cmd == "2") {
+			choice = 1;
+		}
+		else if (cmd == "3") {
+			choice = 2;
+		}
+		else if (cmd == "4") {
+			choice = 3;
+		}
+		else { return dropBelt(id); }
+		if (inventory[belt][choice]) {
+			cout << "Наразi цей слот зайнятий:\n\n[Поточний пояс]\n\n";
+			getItemInfo(inventory[belt][choice]);
+			cout << "\n[Новий]\n\n";
+			getItemInfo(id);
+			cout << "Бажаете замiнити?: (y/n)" << endl;
+			if (confirm()) {
+				cout << "Успiх!\n";
+				equipBelt(id, choice);
+			}
+			else { return 0; }
+		}
+		else { return dropBelt(id); }
+		system("cls");
 		return 0;
 	}
 	int dropItem() {
 		int tempid=1+rand()%size(Items);
 		cout << "\n==================================" << endl\
 			<<"Ого ви знайшли новий предмет!" << endl;
+		dropChance = 30;
 		getItemInfo(tempid);
 		if (Items[tempid][slot] != belt) {
 			cout << "\nПоточний предмет\n\n";
 			getItemInfo(inventory[Items[tempid][slot]][Items[tempid][secondSlot]]);
 		}
 		cout << "Одягти? (y/n): ";
-		cin >> cmd;
-		if (cmd == "yes" || cmd == "y") {
+		bool answer = confirm();
+		if (answer) {
 			if (Items[tempid][slot] == belt) {
-				cout << "Виберiть слот: " << endl;
-				//...
+				dropBelt(tempid);
 			}
 			else {
 				cout << "Ви успiшно одягли предмет" << endl;
 				equipItem(tempid);
 			}
 		}
-		else if (cmd == "no" || cmd == "n") {
+		else if (!answer) {
 			return 0;
 		}
 		else { cin >> cmd; }
@@ -268,7 +385,7 @@ public:
 	}
 	int noDrop() {
 		dropChance += 5;
-		cout << "Нажаль нового предмету ви не отримаєте :( (+5% до шансу для наступноii спроби)" << endl;
+		cout << "Нажаль нового предмету ви не отримаєте :( (+5% до шансу для наступної спроби)" << endl;
 		return 0;
 	}
 private:
@@ -364,6 +481,7 @@ void OnGameInit(int command) {
 				<< "---------------" << endl;
 			cout << "Ваш хiд: " << endl;
 			cin >> duel_cmd;
+			system("cls");
 			bot_try = rand() % 2;
 			switch (bot_try) {
 			case 0:
@@ -403,7 +521,7 @@ void OnGameInit(int command) {
 				}
 				if (rand() % 101 <= bot.parry && duel_cmd == 'a' && player.do_chance == true && bot_do == 'd' && bot.do_chance == true) {
 					int tempranddmg = rand() % 11;
-					cout << "Ви бездумно замахнулись iз усiєii сили в супротивника, але бот зумiв передбачити це, але меч вiдрiкошетило по вам самим." << endl;
+					cout << "Ви бездумно замахнулись iз усiєї сили в супротивника, але бот зумiв передбачити це, але меч вiдрiкошетило по вам самим." << endl;
 					cout << "Ви: -" << (bot.damage + tempranddmg) << endl;
 					player.health -= (bot.damage+tempranddmg);
 
@@ -423,7 +541,7 @@ void OnGameInit(int command) {
 					cout << "Знову два гравцi вирiшили помахати своiми мечами\n[HP] -0 HP у обох гравцiв!" << endl;
 				}
 				if (duel_cmd == 'a' && bot_do == 'd' && player.do_chance == false && bot.do_chance == true) {
-					cout << "Може вже досить махати мечем по повітрю?\nВи та ваш опонент промахнулись!\n[HP] -0 HP у обох гравцiв!" << endl;
+					cout << "Може вже досить махати мечем по повiтрю?\nВи та ваш опонент промахнулись!\n[HP] -0 HP у обох гравцiв!" << endl;
 				}
 				//cout << "debug: " << duel_cmd << " " << bot_do << " " << player.do_chance << " " << bot.do_chance << endl;
 				
@@ -528,11 +646,18 @@ void OnGameInit(int command) {
 			<< "                     ████  ████" << endl\
 			<< "                    █████  █████ " << endl\
 			<< "  Взуття:            [ " << ItemName[inventory[wear][3]][1] << " ] " << endl;
-		cout << "Повернутись (back): ";
+		cout << "Повернутись (back)\nДiї с предметами (adv)\n==>: ";
 		cin >> cmd;
-		if (cmd == "back") {
-			system("cls");
+		system("cls");
+		if (cmd == "adv") {
+			player.advancedInv();
 		}
+		else if (cmd == "back") { OnGameInit(666); }
+		else { OnGameInit(inv); }
+		break;
+	case debug:
+		//player.dropBelt(7);
+		//player.dropItem();
 		break;
 	default:;
 	}
@@ -621,6 +746,9 @@ void cmds(string cmd) {
 		auth = false;
 		system("cls");
 	}
+	else if (cmd == "debug") {
+		OnGameInit(debug);
+	}
 	else if (cmd == "q" or cmd == "quit") {
 		exit(0);
 	}
@@ -630,7 +758,7 @@ void cmds(string cmd) {
 }
 
 int main() {
-	setlocale(LC_ALL, "rus");
+	setlocale(LC_ALL, "Ukrainian");
 	srand(time(NULL));
 	//OnGameInit(666);
 	if (!auth) { OnGameLoad(); }
