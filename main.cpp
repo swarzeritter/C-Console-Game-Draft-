@@ -11,6 +11,7 @@ Will do
 "||============\n\
 || DUELIST beta 0.1\n\
 ||\n\
+||(help)\n\
 |=> "
 using namespace std;
 
@@ -74,8 +75,12 @@ string ItemName[][2] = {
 	{"3",		"Шлем авантюриста"},
 	{"4",		"Кожух авантюриста"},
 	{"5",		"Штани авантюриста"},
-	{"6",		"Шлем авантюриста"},
-	{"7",		"Пояс Зевса"}
+	{"6",		"Взуття авантюриста"},
+	{"7",		"Пояс Зевса"},
+	{"8",		"Пояс D@n$x$"},
+	{"9",		"Пояс авантюриста старої закалки"},
+	{"10",		"Пояс Архона"},
+	{"11",		"Меч Дейдалус"}
 };
 int Items[][8] = {
 	//id		slot		sSlot		iHP			iDMG		iHit		iProt		iParry
@@ -87,7 +92,11 @@ int Items[][8] = {
 	{4,			wear,		body,		0,			-1,			-1,			3,			1},
 	{5,			wear,		legs,		0,			-1,			0,			3,			1},
 	{6,			wear,		boots,		0,			0,			0,			1,			1},
-	{1,			belt,		0,			2,			3,			5,			-7,			-6}
+	{7,			belt,		0,			2,			3,			5,			-7,			-6},
+	{8,			belt,		0,			-35,		20,			-10,		0,			0},
+	{9,			belt,		0,			0,			0,			-5,			15,			0},
+	{10,		belt,		0,			-5,			5,			3,			4,			3},
+	{11,		weapon,		rightArm,	-75,		88,			-15,		0,			-15}
 
 };
 class Player {
@@ -352,7 +361,7 @@ public:
 			}
 			else { return 0; }
 		}
-		else { return dropBelt(id); }
+		else { equipBelt(id, choice); }
 		system("cls");
 		return 0;
 	}
@@ -387,6 +396,16 @@ public:
 		dropChance += 5;
 		cout << "Нажаль нового предмету ви не отримаєте :( (+5% до шансу для наступної спроби)" << endl;
 		return 0;
+	}
+	void randomAbility() {
+		switch (rand() % 3) {
+		case 0:
+			hit += 2;
+		case 1:
+			protection += 2;
+		case 2:
+			parry += 2;
+		}
 	}
 private:
 	int addHP;
@@ -465,6 +484,11 @@ void OnGameInit(int command) {
 	case duel:
 		char duel_cmd;
 		player.health = player.totalHP(player.health);
+		if (player.lvl > 1) {
+			for (int i = 0; i < player.lvl - 1; i++) {
+				bot.randomAbility();
+			}
+		}
 		system("cls");
 		cout << "Бачу ти вже готовий! Твiй супротивник: Бот#" << rand()%100 << endl;//i
 		cout << "Його данi:" << endl\
@@ -594,7 +618,7 @@ void OnGameInit(int command) {
 			cout << "[!!!] Перемогти бота це круто, але потрiбно було залишитись в живих :/ " << endl;
 			player.giveRandExp(6);
 		}
-		player.dropItem();
+		//player.dropItem();
 		player.calcLVL();
 		player.duel_num++;
 		break;
@@ -619,33 +643,17 @@ void OnGameInit(int command) {
 		break;
 	case inv:
 		system("cls");
-		cout << "  Голова:	      [" << ItemName[inventory[wear][0]][1] << "] " << endl\
-			<< "                    ▄▄██████▄▄ " << endl\
-			<< "                   ████████████" << endl\
-			<< "                  ██████████████" << endl\
-			<< "                  ███▀      ▀███" << endl\
-			<< "                  ▀█▀ *    * ▀█▀" << endl\
-			<< "                   ▀▄   --   ▄▀" << endl\
-			<< "                     ▀▀▄▄▄▄▀▀" << endl\
-			<< "   Тiло:	      [" << ItemName[inventory[wear][1]][1] << "] " << endl\
-			<< "                   ▄███████████▄" << endl\
-			<< "                  ▄█████████████▄" << endl\
-			<< "                 ▄▀ ▄▀█████████ ▀▄" << endl\
-			<< "               ▄▀ ▄▀  ████████ ▀▄ ▀▄" << endl\
-			<< "               ▀▀▀    ▄▀████▀▄   ▀▄█" << endl\
-			<< "   Права рука: [" << ItemName[inventory[weapon][rightArm]][1] << "]   Лiва рука: [" << ItemName[inventory[weapon][leftArm]][1] << "] " << endl\
-			<< "                      ██▄▄▄▄██" << endl\
-			<< "	Пояс:      [" << ItemName[inventory[belt][0]][1] << "]    [" << ItemName[inventory[belt][1]][1] << "]" << endl
-			<< "	           [" << ItemName[inventory[belt][2]][1] << "]    [" << ItemName[inventory[belt][3]][1] << "]" << endl
-			<< "                      ████████" << endl\
-			<< "                      ███▀▀███" << endl\
-			<< "                      ███  ███" << endl\
-			<< "                      ███  ███" << endl\
-			<< "  Ноги:    	     [ " << ItemName[inventory[wear][2]][1] << " ] " << endl\
-			<< "                      ███  ███" << endl\
-			<< "                     ████  ████" << endl\
-			<< "                    █████  █████ " << endl\
-			<< "  Взуття:            [ " << ItemName[inventory[wear][3]][1] << " ] " << endl;
+		cout << "|=====================|" << endl;
+		cout << "|      Inventory      |" << endl;
+		cout << "|=====================|" << endl;
+		cout << endl;
+		cout << "Голова:		[ " << ItemName[inventory[wear][0]][1] << " ] " << endl;
+		cout << "Тiло:		[ " << ItemName[inventory[wear][1]][1] << " ] " << endl;
+		cout << "Права рука:	[ " << ItemName[inventory[weapon][rightArm]][1] << " ]   Лiва рука: [ " << ItemName[inventory[weapon][leftArm]][1] << " ] " << endl;
+		cout << "Пояс:		[ " << ItemName[inventory[belt][0]][1] << " ]    [ " << ItemName[inventory[belt][1]][1] << " ]" << endl;
+		cout << "		[ " << ItemName[inventory[belt][2]][1] << " ]    [ " << ItemName[inventory[belt][3]][1] << " ]" << endl;
+		cout << "Ноги:		[ " << ItemName[inventory[wear][2]][1] << " ] " << endl;
+		cout << "Взуття:		[ " << ItemName[inventory[wear][3]][1] << " ] " << endl;
 		cout << "Повернутись (back)\nДiї с предметами (adv)\n==>: ";
 		cin >> cmd;
 		system("cls");
@@ -721,6 +729,7 @@ void OnGameLoad() {
 
 void cmds(string cmd) {
 	if (cmd == "help"){
+		system("cls");
 		cout << "\
 |КОМАНДИ:\n\
 |duel - розпочати дуель\n\
@@ -760,9 +769,10 @@ void cmds(string cmd) {
 int main() {
 	setlocale(LC_ALL, "Ukrainian");
 	srand(time(NULL));
+	system("color b");
 	//OnGameInit(666);
-	if (!auth) { OnGameLoad(); }
 	while (true) {
+		if (!auth) { OnGameLoad(); }
 		cout << logotype;
 		cin >> cmd;
 		cmds(cmd);
